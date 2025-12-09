@@ -1,16 +1,19 @@
 import type { NextConfig } from 'next';
 
+const externalHosts = [
+  'anak-sehat.vercel.app',
+  'media.istockphoto.com',
+  'i.pinimg.com',
+  'media.licdn.com',
+  'cdn.discordapp.com',
+];
+
 const nextConfig: NextConfig = {
   images: {
-    domains: [
-      'anak-sehat.vercel.app',
-      'media.istockphoto.com',
-      'images.remotePatterns',
-      'images.domain',
-      'i.pinimg.com',
-      'media.licdn.com',
-      'cdn.discordapp.com',
-    ],
+    remotePatterns: externalHosts.map((hostname) => ({
+      protocol: 'https',
+      hostname,
+    })),
   },
 };
 
