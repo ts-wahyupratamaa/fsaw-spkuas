@@ -461,6 +461,18 @@ const GigiDetection = () => {
             </table>
           </div>
         </SectionCard>
+        <p className='text-xs text-white/60 text-center md:text-right'>
+          Perlu narasi interpretasi SAW?{' '}
+          <Link
+            href={{
+              pathname: '/fsaw-detection/interpretasi',
+              query: { data: JSON.stringify(results.ranking) },
+            }}
+            className='font-semibold text-white hover:text-emerald-300 underline underline-offset-4'
+          >
+            Lihat penjelasan fuzzy
+          </Link>
+        </p>
       </div>
     </div>
   );

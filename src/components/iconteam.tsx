@@ -4,12 +4,12 @@ import Image from 'next/image';
 import { motion } from 'framer-motion';
 
 const frontMembers = [
-  { name: 'Fiky', src: '/team/fiky.png' },
-  { name: 'Meita', src: '/team/meita.png' },
-  { name: 'Sarah', src: '/team/sarah.png' },
+  { name: 'Mahluk Pelengkap', src: '/team/sarah.png' },
+  { name: 'Raja SPK Manual', src: '/team/meita.png'},
+  { name: 'Raja Machine Learning', src: '/team/fiky.png' },
 ];
 
-const trailingMember = { name: 'Wahyu', src: '/team/wahyu.png' };
+const trailingMember = { name: 'Raja Js', src: '/team/wahyu.png' };
 
 const wiggle = (delay = 0, duration = 3) => ({
   animate: {
@@ -29,23 +29,52 @@ const IconBubble = ({
   delay,
   duration = 3,
   alt,
+
+  containerHeight,
+  lineOffset,
 }: {
   src: string;
   size: number;
   delay?: number;
   duration?: number;
   alt: string;
+
+  containerHeight: number;
+  lineOffset: number;
 }) => {
   const motionProps = wiggle(delay, duration);
+  const bubbleTopOffset = containerHeight / 2 - size / 2;
+  const circleRadius = 6; // px (tailwind h-3)
+  const stringLength = Math.max(bubbleTopOffset - lineOffset + circleRadius, 24);
+  const circleTop = (lineOffset - circleRadius) - bubbleTopOffset;
   return (
     <motion.div
-      className='relative flex items-center justify-center rounded-full border-4 border-white/70 bg-white/50 shadow-2xl shadow-[#87003d]/40 backdrop-blur-sm'
+      className='group relative flex items-center justify-center overflow-visible '
       style={{ width: size, height: size }}
       animate={motionProps.animate}
       transition={motionProps.transition}
+
+      tabIndex={0}
+
     >
-      <div className='relative h-full w-full overflow-hidden rounded-full'>
+      <span
+        className='pointer-events-none absolute left-1/2 flex -translate-x-1/2 flex-col items-center text-slate-300'
+        style={{ top: circleTop }}
+        aria-hidden
+      >
+        <span className='mb-1 h-3 w-3 ' />
+        <span
+          className='w-px border-l-2 border-dashed border-slate-300/80'
+          style={{ height: stringLength }}
+        ></span>
+      </span>
+      <div className='relative h-full w-full overflow-hidden mt-2 '>
         <Image src={src} alt={alt} fill sizes={`${size}px`} className='object-cover' />
+      </div>
+      <div className='pointer-events-none absolute left-1/2 top-full mt-3 flex -translate-x-1/2 flex-col items-center text-center opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-visible:opacity-100'>
+        <span className='bg-white px-2 py-1 text-xs font-semibold text-slate-900 '>
+          {alt}
+        </span>
       </div>
     </motion.div>
   );
@@ -55,6 +84,8 @@ const IconTeam = () => {
   const marqueeDuration = 28;
   const frontSpacing = 1.1;
   const trailingDelay = 7.5;
+  const containerHeight = 224; // tailwind h-56 = 14rem
+  const lineOffset = 32; // matches top-8 dashed wire
   const lineup = [
     { ...frontMembers[0], size: 120, delay: 0 },
     { ...frontMembers[1], size: 120, delay: frontSpacing },
@@ -63,8 +94,11 @@ const IconTeam = () => {
   ];
 
   return (
-    <div className='relative left-1/2 right-1/2 mb-8 h-56 w-screen -translate-x-1/2 overflow-hidden'>
+    <div className='relative left-1/2 right-1/2 mb-8 h-64 w-screen -translate-x-1/2 overflow-hidden'>
       <div className='pointer-events-none absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent blur-3xl' aria-hidden />
+      <div className='pointer-events-none absolute inset-x-0 top-8 flex h-8 items-center' aria-hidden>
+        <div className='h-px w-full border-t-2 border-dashed border-slate-200'></div>
+      </div>
       {lineup.map((member) => (
         <motion.div
           key={member.name}
@@ -80,7 +114,16 @@ const IconTeam = () => {
             delay: member.delay,
           }}
         >
-          <IconBubble src={member.src} size={member.size} alt={member.name} delay={0} duration={3.8} />
+          <IconBubble
+            src={member.src}
+            size={member.size}
+            alt={member.name}
+
+            delay={0}
+            duration={3.8}
+            containerHeight={containerHeight}
+            lineOffset={lineOffset}
+          />
         </motion.div>
       ))}
     </div>
