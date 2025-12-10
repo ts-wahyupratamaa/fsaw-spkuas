@@ -39,7 +39,7 @@ const Navbar = () => {
           <div className='flex items-center text-center gap-5'>
               <button
                 type='button'
-                className='py-2 px-4 rounded-sm bg-[#F8E8F2] text-[#7c1835] transition-colors duration-200 font-bold text-sm sm:text-base shadow-[0_8px_30px_rgba(124,24,53,0.15)] hover:-translate-y-[1px] active:translate-y-[1px]'
+                className='py-2 px-4 rounded-sm bg-[#F8E8F2] text-[#7c1835] transition-colors duration-200 font-bold text-sm sm:text-base  hover:-translate-y-[1px] active:translate-y-[1px]'
                 onClick={() => {
                   const element = document.getElementById('home-section');
                   if (element) {
