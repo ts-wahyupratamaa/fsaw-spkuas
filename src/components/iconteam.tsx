@@ -5,11 +5,11 @@ import { motion } from 'framer-motion';
 
 const frontMembers = [
   { name: 'Mahluk Pelengkap', src: '/team/sarah.png' },
-  { name: 'Raja SPK Manual', src: '/team/meita.png' },
+  { name: 'Raja SPK', src: '/team/meita.png' },
   { name: 'Raja Machine Learning', src: '/team/fiky.png' },
 ];
 
-const trailingMember = { name: 'Raja Js', src: '/team/wahyu.png' };
+const trailingMember = { name: 'Beban', src: '/team/wahyu.png' };
 
 const wiggle = (delay = 0, duration = 3) => ({
   initial: { rotate: 0, y: 0 },
