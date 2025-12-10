@@ -102,8 +102,15 @@ const Section = () => {
       className='relative flex w-full min-h-screen items-start justify-center overflow-hidden py-8 md:py-14'
     >
       <GridPatternDemo className='absolute inset-0 h-full w-full' />
-      <div className='relative z-10 mx-auto flex w-full max-w-6xl flex-col gap-10 px-4 md:px-8'>
-        <IconTeam />
+      <div className='relative z-10 mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 md:px-8'>
+        <div className='flex flex-col gap-4 md:gap-6'>
+          <div className='md:hidden'>
+            <IconTeam />
+          </div>
+          <div className='hidden md:block'>
+            <IconTeam />
+          </div>
+        </div>
         <div className='relative flex flex-col gap-12'>
           <div className='flex flex-col-reverse items-center gap-10 md:flex-row md:items-center md:justify-between'>
             <div className='flex w-full max-w-2xl flex-col gap-6 text-center md:text-left'>

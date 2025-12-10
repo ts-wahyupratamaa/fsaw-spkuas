@@ -31,15 +31,15 @@ const Navbar = () => {
           {/* <Image src='/gigi.png' alt='Logo' width={70} height={70} /> */}
         </Link>
         <motion.div
-          className='lg:flex gap-5 items-center hidden'
+          className='flex gap-3 items-center'
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.3, ease: 'easeInOut' }}
         >
           <div className='flex items-center text-center gap-5'>
-
-              <span
-                className='py-2 px-4 rounded-sm bg-[#F8E8F2] text-[#7c1835] transition-colors duration-200 font-bold '
+              <button
+                type='button'
+                className='py-2 px-4 rounded-sm bg-[#F8E8F2] text-[#7c1835] transition-colors duration-200 font-bold text-sm sm:text-base shadow-[0_8px_30px_rgba(124,24,53,0.15)] hover:-translate-y-[1px] active:translate-y-[1px]'
                 onClick={() => {
                   const element = document.getElementById('home-section');
                   if (element) {
@@ -47,9 +47,8 @@ const Navbar = () => {
                   }
                 }}
               >
-team greenflag
-              </span>
-
+                team greenflag
+              </button>
           </div>
         </motion.div>
       </div>
