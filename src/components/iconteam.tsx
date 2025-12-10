@@ -12,8 +12,10 @@ const frontMembers = [
 const trailingMember = { name: 'Raja Js', src: '/team/wahyu.png' };
 
 const wiggle = (delay = 0, duration = 3) => ({
+  initial: { rotate: 0, y: 0 },
   animate: {
-    rotate: ['-3deg', '3deg', '-3deg'],
+    rotate: ['-4deg', '4deg', '-4deg'],
+    y: [0, -16, 0],
   },
   transition: {
     repeat: Infinity,
@@ -51,11 +53,10 @@ const IconBubble = ({
     <motion.div
       className='group relative flex items-center justify-center overflow-visible '
       style={{ width: size, height: size }}
+      initial={motionProps.initial}
       animate={motionProps.animate}
       transition={motionProps.transition}
-
       tabIndex={0}
-
     >
       <span
         className='pointer-events-none absolute left-1/2 flex -translate-x-1/2 flex-col items-center text-slate-300'
@@ -84,8 +85,8 @@ const IconTeam = () => {
   const marqueeDuration = 28;
   const frontSpacing = 1.1;
   const trailingDelay = 7.5;
-  const containerHeight = 224; // tailwind h-56 = 14rem
-  const lineOffset = 32; // matches top-8 dashed wire
+  const containerHeight = 184; // tighter footprint to keep hero content above the fold
+  const lineOffset = 24; // matches updated dashed wire offset
   const lineup = [
     { ...frontMembers[0], size: 120, delay: 0 },
     { ...frontMembers[1], size: 120, delay: frontSpacing },
@@ -94,9 +95,9 @@ const IconTeam = () => {
   ];
 
   return (
-    <div className='relative left-1/2 right-1/2 mb-8 h-64 w-screen -translate-x-1/2 overflow-hidden'>
+    <div className='relative left-1/2 right-1/2 mb-2 h-40 w-screen -translate-x-1/2 overflow-hidden md:h-48 lg:h-56'>
       <div className='pointer-events-none absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent blur-3xl' aria-hidden />
-      <div className='pointer-events-none absolute inset-x-0 top-8 flex h-8 items-center' aria-hidden>
+      <div className='pointer-events-none absolute inset-x-0 top-4 flex h-6 items-center md:top-6 md:h-8' aria-hidden>
         <div className='h-px w-full border-t-2 border-dashed border-slate-200'></div>
       </div>
       {lineup.map((member) => (

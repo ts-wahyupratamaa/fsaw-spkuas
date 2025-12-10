@@ -1,6 +1,9 @@
+"use client";
+
 import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { motion } from 'framer-motion';
 import IconTeam from '@/components/iconteam';
 import { GridPatternDemo } from '@/components/fragments/molecule/GridPatternDemo';
 import { ShimmerButton } from '@/components/magicui/shimmer-button';
@@ -56,8 +59,13 @@ const noteItems: NoteItem[] = [
   },
 ];
 
-const NoteCard = ({ note }: { note: NoteItem }) => (
-  <div className={cn('relative w-48 sm:w-56 md:w-56', note.wrapperClass)}>
+const NoteCard = ({ note, index }: { note: NoteItem; index: number }) => (
+  <motion.div
+    className={cn('relative w-48 sm:w-56 md:w-56', note.wrapperClass)}
+    initial={{ y: 0, rotate: 0 }}
+    animate={{ y: [0, -18, 0], rotate: [0, 1.6, 0] }}
+    transition={{ duration: 6 + index, repeat: Infinity, repeatType: 'mirror', delay: index * 0.45, ease: 'easeInOut' }}
+  >
     <div className='absolute -top-12 left-1/2 flex -translate-x-1/2 flex-col items-center'>
       <span
         className={cn(
@@ -82,7 +90,7 @@ const NoteCard = ({ note }: { note: NoteItem }) => (
         <p className='text-xs leading-relaxed text-slate-600'>{note.description}</p>
       </div>
     </div>
-  </div>
+  </motion.div>
 );
 
 const Section = () => {
@@ -91,7 +99,7 @@ const Section = () => {
   return (
     <section
       id='home-section'
-      className='relative flex w-full min-h-screen items-center justify-center overflow-hidden py-16'
+      className='relative flex w-full min-h-screen items-start justify-center overflow-hidden py-8 md:py-14'
     >
       <GridPatternDemo className='absolute inset-0 h-full w-full' />
       <div className='relative z-10 mx-auto flex w-full max-w-6xl flex-col gap-10 px-4 md:px-8'>
@@ -121,9 +129,9 @@ const Section = () => {
               <div className='relative h-56 w-56 overflow-hidden rounded-xl sm:h-72 sm:w-72 md:h-80 md:w-80 lg:h-96 lg:w-96'>
                 {/* <Image src='/gigii.png' alt='Logo' width={600} height={600} className='object-cover' /> */}
               </div>
-              <div className='hidden md:flex flex-col items-end gap-10'>
-                {rightNotes.map((note) => (
-                  <NoteCard key={note.step} note={note} />
+              <div className='hidden md:flex -mt-10 flex-col items-end gap-10'>
+                {rightNotes.map((note, index) => (
+                  <NoteCard key={note.step} note={note} index={index} />
                 ))}
               </div>
             </div>

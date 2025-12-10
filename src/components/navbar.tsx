@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-
+import Image from 'next/image'
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -28,7 +28,7 @@ const Navbar = () => {
     >
       <div className='mx-auto flex justify-between items-center max-w-7xl h-full px-4 sm:px-6'>
         <Link href='/' className='text-3xl md:text-5xl font-bold'>
-          {/* <Image src='/gigii.png' alt='Logo' width={70} height={70} /> */}
+          {/* <Image src='/gigi.png' alt='Logo' width={70} height={70} /> */}
         </Link>
         <motion.div
           className='lg:flex gap-5 items-center hidden'
@@ -39,7 +39,7 @@ const Navbar = () => {
           <div className='flex items-center text-center gap-5'>
 
               <span
-                className='py-2 px-4 rounded-sm bg-[#F8E8F2] text-[#7c1835] transition-colors duration-200'
+                className='py-2 px-4 rounded-sm bg-[#F8E8F2] text-[#7c1835] transition-colors duration-200 font-bold '
                 onClick={() => {
                   const element = document.getElementById('home-section');
                   if (element) {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { FaArrowLeftLong, FaPlus, FaRotateLeft, FaTrash } from 'react-icons/fa6';
 import { TextGenerateEffect } from '@/components/ui/text-generate-effect';
@@ -53,6 +53,14 @@ const FormulaBlock = ({ label, formula }: { label: string; formula: string }) =>
   </div>
 );
 
+const buildFuzzyInputKey = (alternativeId: string, criterionId: string, key: PointKey) =>
+  `${alternativeId}-${criterionId}-${key}`;
+
+const isInterimNumeric = (value: string) => {
+  const trimmed = value.trim();
+  return trimmed === '' || trimmed === '-' || trimmed === '.' || trimmed === '-.';
+};
+
 const GigiDetection = () => {
   const {
     criteria,
@@ -67,6 +75,9 @@ const GigiDetection = () => {
     resetDefaults,
   } = useFuzzySawStore();
 
+  const [weightInputs, setWeightInputs] = useState<Record<string, string>>({});
+  const [fuzzyInputs, setFuzzyInputs] = useState<Record<string, string>>({});
+
   const results = useMemo(() => calculateFuzzySaw(criteria, alternatives), [criteria, alternatives]);
 
   const canRemoveCriterion = criteria.length > 1;
@@ -78,14 +89,77 @@ const GigiDetection = () => {
     key: PointKey,
     value: string,
   ) => {
-    const numericValue = Number(value);
+    const cacheKey = buildFuzzyInputKey(alternativeId, criterionId, key);
+    setFuzzyInputs((prev) => ({
+      ...prev,
+      [cacheKey]: value,
+    }));
+
+    if (isInterimNumeric(value)) {
+      return;
+    }
+
+    const normalizedValue = Number(value.replace(',', '.'));
+    if (Number.isNaN(normalizedValue)) {
+      return;
+    }
+
     updateAlternativeValue(alternativeId, criterionId, {
-      [key]: Number.isNaN(numericValue) ? 0 : numericValue,
+      [key]: normalizedValue,
+    });
+  };
+
+  const handleValueBlur = (alternativeId: string, criterionId: string, key: PointKey) => {
+    const cacheKey = buildFuzzyInputKey(alternativeId, criterionId, key);
+    const cachedValue = fuzzyInputs[cacheKey];
+    if (cachedValue === undefined) {
+      return;
+    }
+
+    const normalizedValue = Number(cachedValue.replace(',', '.'));
+    updateAlternativeValue(alternativeId, criterionId, {
+      [key]: Number.isNaN(normalizedValue) ? 0 : normalizedValue,
+    });
+
+    setFuzzyInputs((prev) => {
+      const next = { ...prev };
+      delete next[cacheKey];
+      return next;
     });
   };
 
   const handleWeightChange = (id: string, value: string) => {
-    updateCriterion(id, { weight: Number.isNaN(Number(value)) ? 0 : Number(value) });
+    setWeightInputs((prev) => ({
+      ...prev,
+      [id]: value,
+    }));
+
+    if (isInterimNumeric(value)) {
+      return;
+    }
+
+    const numericValue = Number(value.replace(',', '.'));
+    if (Number.isNaN(numericValue)) {
+      return;
+    }
+
+    updateCriterion(id, { weight: numericValue });
+  };
+
+  const handleWeightBlur = (id: string) => {
+    const cachedValue = weightInputs[id];
+    if (cachedValue === undefined) {
+      return;
+    }
+
+    const numericValue = Number(cachedValue.replace(',', '.'));
+    updateCriterion(id, { weight: Number.isNaN(numericValue) ? 0 : numericValue });
+
+    setWeightInputs((prev) => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
   };
 
   const handleTypeChange = (id: string, value: string) => {
@@ -159,8 +233,10 @@ const GigiDetection = () => {
                         type='number'
                         step='0.01'
                         min='0'
-                        value={criterion.weight}
+                        inputMode='decimal'
+                        value={weightInputs[criterion.id] ?? criterion.weight.toString()}
                         onChange={(event) => handleWeightChange(criterion.id, event.target.value)}
+                        onBlur={() => handleWeightBlur(criterion.id)}
                         className='w-full rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-sm focus:border-white focus:outline-none'
                       />
                     </td>
@@ -244,10 +320,15 @@ const GigiDetection = () => {
                               <input
                                 type='number'
                                 step='0.01'
-                                value={value[key] ?? 0}
+                                inputMode='decimal'
+                                value={
+                                  fuzzyInputs[buildFuzzyInputKey(alternative.id, criterion.id, key)] ??
+                                  (value[key] ?? '').toString()
+                                }
                                 onChange={(event) =>
                                   handleValueChange(alternative.id, criterion.id, key, event.target.value)
                                 }
+                                onBlur={() => handleValueBlur(alternative.id, criterion.id, key)}
                                 className='rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm text-white focus:border-white focus:outline-none'
                               />
                             </label>

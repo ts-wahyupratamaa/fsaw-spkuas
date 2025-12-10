@@ -7,6 +7,8 @@ const geistSans = Geist({
   variable: '--font-geist-sans',
   subsets: ['latin'],
 });
+import { SmoothCursor } from "@/components/ui/smooth-cursor"
+
 
 const geistMono = Geist_Mono({
   variable: '--font-geist-mono',
@@ -37,6 +39,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         {children}
+        <SmoothCursor/>
         <Toaster />
       </body>
     </html>
