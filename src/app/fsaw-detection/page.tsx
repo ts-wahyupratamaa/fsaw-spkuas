@@ -4,7 +4,7 @@ import FsawDetectionClient from './FsawDetectionClient';
 
 const pageTitle = 'Deteksi Fuzzy SAW & Ranking Alternatif';
 const pageDescription =
-  'Masukkan alternatif, bobot, dan Triangular Fuzzy Number untuk langsung melihat normalisasi, pembobotan, serta ranking metode SAW yang transparan.';
+  'Masukkan alternatif, bobot, dan nilai fuzzy untuk langsung melihat normalisasi, pembobotan, serta ranking metode SAW yang transparan.';
 const fsawDetectionUrl = new URL('/fsaw-detection', siteMetadata.siteUrl).toString();
 
 export const metadata: Metadata = {

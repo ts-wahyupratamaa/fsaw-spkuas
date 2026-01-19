@@ -8,20 +8,11 @@ import { Ripple } from '@/components/magicui/ripple';
 import { useFuzzySawStore } from '@/store/fuzzySawStore';
 import {
   calculateFuzzySaw,
-  formatFuzzyValue,
+  formatScalarValue,
   CriterionType,
 } from '@/utils/fuzzy/fuzzySaw';
 
 const words = `Deteksi Fuzzy SAW`;
-
-const pointKeys = ['low', 'mid', 'high'] as const;
-type PointKey = (typeof pointKeys)[number];
-
-const fuzzyLabels: Record<PointKey, string> = {
-  low: 'Rendah (a)',
-  mid: 'Sedang (m)',
-  high: 'Tinggi (b)',
-};
 
 const SectionCard = ({
   title,
@@ -53,9 +44,6 @@ const FormulaBlock = ({ label, formula }: { label: string; formula: string }) =>
   </div>
 );
 
-const buildFuzzyInputKey = (alternativeId: string, criterionId: string, key: PointKey) =>
-  `${alternativeId}-${criterionId}-${key}`;
-
 const isInterimNumeric = (value: string) => {
   const trimmed = value.trim();
   return trimmed === '' || trimmed === '-' || trimmed === '.' || trimmed === '-.';
@@ -76,21 +64,16 @@ const FsawDetectionClient = () => {
   } = useFuzzySawStore();
 
   const [weightInputs, setWeightInputs] = useState<Record<string, string>>({});
-  const [fuzzyInputs, setFuzzyInputs] = useState<Record<string, string>>({});
+  const [valueInputs, setValueInputs] = useState<Record<string, string>>({});
 
   const results = useMemo(() => calculateFuzzySaw(criteria, alternatives), [criteria, alternatives]);
 
   const canRemoveCriterion = criteria.length > 1;
   const canRemoveAlternative = alternatives.length > 1;
 
-  const handleValueChange = (
-    alternativeId: string,
-    criterionId: string,
-    key: PointKey,
-    value: string,
-  ) => {
-    const cacheKey = buildFuzzyInputKey(alternativeId, criterionId, key);
-    setFuzzyInputs((prev) => ({
+  const handleValueChange = (alternativeId: string, criterionId: string, value: string) => {
+    const cacheKey = `${alternativeId}-${criterionId}`;
+    setValueInputs((prev) => ({
       ...prev,
       [cacheKey]: value,
     }));
@@ -104,24 +87,20 @@ const FsawDetectionClient = () => {
       return;
     }
 
-    updateAlternativeValue(alternativeId, criterionId, {
-      [key]: normalizedValue,
-    });
+    updateAlternativeValue(alternativeId, criterionId, normalizedValue);
   };
 
-  const handleValueBlur = (alternativeId: string, criterionId: string, key: PointKey) => {
-    const cacheKey = buildFuzzyInputKey(alternativeId, criterionId, key);
-    const cachedValue = fuzzyInputs[cacheKey];
+  const handleValueBlur = (alternativeId: string, criterionId: string) => {
+    const cacheKey = `${alternativeId}-${criterionId}`;
+    const cachedValue = valueInputs[cacheKey];
     if (cachedValue === undefined) {
       return;
     }
 
     const normalizedValue = Number(cachedValue.replace(',', '.'));
-    updateAlternativeValue(alternativeId, criterionId, {
-      [key]: Number.isNaN(normalizedValue) ? 0 : normalizedValue,
-    });
+    updateAlternativeValue(alternativeId, criterionId, Number.isNaN(normalizedValue) ? 0 : normalizedValue);
 
-    setFuzzyInputs((prev) => {
+    setValueInputs((prev) => {
       const next = { ...prev };
       delete next[cacheKey];
       return next;
@@ -179,9 +158,9 @@ const FsawDetectionClient = () => {
           </Link>
           <TextGenerateEffect words={words} />
           <p className='text-base text-white/80 md:max-w-3xl mx-auto md:mx-0'>
-            Masukkan daftar alternatif, bobot kriteria, dan nilai Triangular Fuzzy Number (TFN).
-            Semua perhitungan Simple Additive Weighting (SAW) akan muncul bertahap agar rumus
-            yang digunakan tetap transparan.
+            Masukkan daftar alternatif, bobot kriteria, dan nilai fuzzy (0 - 1) sesuai skala
+            jurnal. Semua perhitungan Simple Additive Weighting (SAW) akan muncul bertahap agar
+            rumus yang digunakan tetap transparan.
           </p>
           <div className='flex flex-wrap items-center gap-3 text-xs text-white/70 justify-center md:justify-start'>
             <span className='px-3 py-1 rounded-full border border-white/20 bg-white/5'>Input → Normalisasi → Pembobotan → Ranking</span>
@@ -269,7 +248,7 @@ const FsawDetectionClient = () => {
 
         <SectionCard
           title='Alternatif & Nilai Fuzzy'
-          description='Setiap kolom nilai menggunakan Triangular Fuzzy Number (a, m, b) untuk menggambarkan karakteristik alternatif.'
+          description='Setiap kolom nilai menggunakan skala fuzzy (SR, R, S, T, ST) berupa angka 0 sampai 1.'
           actions={
             <button
               type='button'
@@ -303,7 +282,7 @@ const FsawDetectionClient = () => {
                 </div>
                 <div className='mt-4 grid gap-4 md:grid-cols-2'>
                   {criteria.map((criterion) => {
-                    const value = alternative.values[criterion.id] ?? { low: 0, mid: 0, high: 0 };
+                    const value = alternative.values[criterion.id] ?? 0;
                     return (
                       <div
                         key={`${alternative.id}-${criterion.id}`}
@@ -311,28 +290,25 @@ const FsawDetectionClient = () => {
                       >
                         <p className='text-sm font-semibold text-white'>{criterion.name}</p>
                         <p className='text-xs text-white/70'>
-                          TFN {criterion.type === 'max' ? 'Benefit' : 'Cost'}
+                          Fuzzy {criterion.type === 'max' ? 'Benefit' : 'Cost'}
                         </p>
-                        <div className='mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3'>
-                          {pointKeys.map((key) => (
-                            <label key={key} className='flex flex-col text-xs text-white/70'>
-                              <span className='mb-1 font-semibold'>{fuzzyLabels[key]}</span>
-                              <input
-                                type='number'
-                                step='0.01'
-                                inputMode='decimal'
-                                value={
-                                  fuzzyInputs[buildFuzzyInputKey(alternative.id, criterion.id, key)] ??
-                                  (value[key] ?? '').toString()
-                                }
-                                onChange={(event) =>
-                                  handleValueChange(alternative.id, criterion.id, key, event.target.value)
-                                }
-                                onBlur={() => handleValueBlur(alternative.id, criterion.id, key)}
-                                className='rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm text-white focus:border-white focus:outline-none'
-                              />
-                            </label>
-                          ))}
+                        <div className='mt-3'>
+                          <label className='flex flex-col text-xs text-white/70'>
+                            <span className='mb-1 font-semibold'>Nilai Fuzzy (0 - 1)</span>
+                            <input
+                              type='number'
+                              step='0.01'
+                              min='0'
+                              max='1'
+                              inputMode='decimal'
+                              value={valueInputs[`${alternative.id}-${criterion.id}`] ?? value.toString()}
+                              onChange={(event) =>
+                                handleValueChange(alternative.id, criterion.id, event.target.value)
+                              }
+                              onBlur={() => handleValueBlur(alternative.id, criterion.id)}
+                              className='rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm text-white focus:border-white focus:outline-none'
+                            />
+                          </label>
                         </div>
                       </div>
                     );
@@ -345,13 +321,12 @@ const FsawDetectionClient = () => {
 
         <SectionCard
           title='Transparansi Rumus'
-          description='Setiap tahap mengikuti Fuzzy SAW: normalisasi matriks fuzzy, pembobotan, kemudian defuzzifikasi untuk ranking akhir.'
+          description='Setiap tahap mengikuti Fuzzy SAW: normalisasi matriks fuzzy, pembobotan, lalu penjumlahan skor akhir.'
         >
           <div className='grid gap-4 md:grid-cols-2'>
             <FormulaBlock label='Normalisasi Benefit' formula='r_ij = x_ij / max(x_ij)' />
             <FormulaBlock label='Normalisasi Cost' formula='r_ij = min(x_ij) / x_ij' />
             <FormulaBlock label='Bobot Normalisasi' formula='w_j = w_j / Σ w_j' />
-            <FormulaBlock label='Defuzzifikasi TFN' formula='V = (a + 4m + b) / 6' />
             <FormulaBlock label='Skor Akhir' formula='S_i = Σ (w_j * r_ij)' />
           </div>
         </SectionCard>
@@ -386,7 +361,7 @@ const FsawDetectionClient = () => {
 
         <SectionCard
           title='Matriks Fuzzy Awal'
-          description='Nilai TFN setiap alternatif terhadap kriteria sebelum normalisasi.'
+          description='Nilai fuzzy setiap alternatif terhadap kriteria sebelum normalisasi.'
         >
           <div className='overflow-x-auto rounded-2xl border border-white/10'>
             <table className='min-w-full divide-y divide-white/10 text-sm'>
@@ -406,7 +381,7 @@ const FsawDetectionClient = () => {
                     <td className='px-4 py-3 font-semibold'>{row.alternativeName}</td>
                     {criteria.map((criterion) => (
                       <td key={criterion.id} className='px-4 py-3 font-mono text-xs'>
-                        {formatFuzzyValue(row.values[criterion.id])}
+                        {formatScalarValue(row.values[criterion.id])}
                       </td>
                     ))}
                   </tr>
@@ -438,7 +413,7 @@ const FsawDetectionClient = () => {
                     <td className='px-4 py-3 font-semibold'>{row.alternativeName}</td>
                     {criteria.map((criterion) => (
                       <td key={criterion.id} className='px-4 py-3 font-mono text-xs'>
-                        {formatFuzzyValue(row.values[criterion.id])}
+                        {formatScalarValue(row.values[criterion.id])}
                       </td>
                     ))}
                   </tr>
@@ -470,7 +445,7 @@ const FsawDetectionClient = () => {
                     <td className='px-4 py-3 font-semibold'>{row.alternativeName}</td>
                     {criteria.map((criterion) => (
                       <td key={criterion.id} className='px-4 py-3 font-mono text-xs'>
-                        {formatFuzzyValue(row.values[criterion.id])}
+                        {formatScalarValue(row.values[criterion.id])}
                       </td>
                     ))}
                   </tr>
@@ -490,8 +465,8 @@ const FsawDetectionClient = () => {
                 <tr>
                   <th className='px-4 py-3 text-left font-semibold'>Kriteria</th>
                   <th className='px-4 py-3 text-left font-semibold'>Tipe</th>
-                  <th className='px-4 py-3 text-left font-semibold'>Max TFN</th>
-                  <th className='px-4 py-3 text-left font-semibold'>Min TFN</th>
+                  <th className='px-4 py-3 text-left font-semibold'>Max</th>
+                  <th className='px-4 py-3 text-left font-semibold'>Min</th>
                 </tr>
               </thead>
               <tbody className='divide-y divide-white/5'>
@@ -502,10 +477,10 @@ const FsawDetectionClient = () => {
                       <td className='px-4 py-3 font-semibold'>{criterion.name}</td>
                       <td className='px-4 py-3 uppercase'>{criterion.type}</td>
                       <td className='px-4 py-3 font-mono text-xs'>
-                        {reference ? formatFuzzyValue(reference.max) : '-'}
+                        {reference ? formatScalarValue(reference.max) : '-'}
                       </td>
                       <td className='px-4 py-3 font-mono text-xs'>
-                        {reference ? formatFuzzyValue(reference.min) : '-'}
+                        {reference ? formatScalarValue(reference.min) : '-'}
                       </td>
                     </tr>
                   );
@@ -517,7 +492,7 @@ const FsawDetectionClient = () => {
 
         <SectionCard
           title='Ranking Akhir'
-          description='Defuzzifikasi TFN menghasilkan nilai crisp untuk menentukan prioritas intervensi.'
+          description='Skor akhir digunakan untuk menentukan prioritas berdasarkan nilai terbesar.'
         >
           <div className='overflow-x-auto rounded-2xl border border-white/10'>
             <table className='min-w-full divide-y divide-white/10 text-sm'>
@@ -525,8 +500,7 @@ const FsawDetectionClient = () => {
                 <tr>
                   <th className='px-4 py-3 text-left font-semibold'>Peringkat</th>
                   <th className='px-4 py-3 text-left font-semibold'>Alternatif</th>
-                  <th className='px-4 py-3 text-left font-semibold'>Skor Fuzzy (ΣW)</th>
-                  <th className='px-4 py-3 text-left font-semibold'>Nilai Crisp</th>
+                  <th className='px-4 py-3 text-left font-semibold'>Skor Akhir</th>
                 </tr>
               </thead>
               <tbody className='divide-y divide-white/5'>
@@ -534,8 +508,7 @@ const FsawDetectionClient = () => {
                   <tr key={row.alternativeId} className={index === 0 ? 'bg-emerald-500/10' : ''}>
                     <td className='px-4 py-3 font-semibold'>{index + 1}</td>
                     <td className='px-4 py-3 font-semibold'>{row.alternativeName}</td>
-                    <td className='px-4 py-3 font-mono text-xs'>{formatFuzzyValue(row.fuzzyScore)}</td>
-                    <td className='px-4 py-3 font-semibold'>{row.crispScore.toFixed(3)}</td>
+                    <td className='px-4 py-3 font-semibold'>{row.score.toFixed(3)}</td>
                   </tr>
                 ))}
               </tbody>

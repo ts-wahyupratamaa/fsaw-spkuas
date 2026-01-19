@@ -1,11 +1,11 @@
 'use client';
 
 import { create } from 'zustand';
-import { Alternative, Criterion, FuzzyValue } from '@/utils/fuzzy/fuzzySaw';
+import { Alternative, Criterion } from '@/utils/fuzzy/fuzzySaw';
 
 const createId = (prefix: string) => `${prefix}-${Math.random().toString(36).slice(2, 9)}`;
 
-const blankValue = (): FuzzyValue => ({ low: 0, mid: 0, high: 0 });
+const blankValue = (): number => 0;
 
 const baseCriteria: Criterion[] = [
   { id: 'c1', name: 'Kualitas Data Historis', weight: 0.35, type: 'max' },
@@ -19,30 +19,30 @@ const baseAlternatives: Alternative[] = [
     id: 'a1',
     name: 'Alternatif A',
     values: {
-      c1: { low: 60, mid: 70, high: 85 },
-      c2: { low: 50, mid: 60, high: 70 },
-      c3: { low: 20, mid: 30, high: 40 },
-      c4: { low: 65, mid: 75, high: 90 },
+      c1: 0.75,
+      c2: 0.5,
+      c3: 0.25,
+      c4: 0.75,
     },
   },
   {
     id: 'a2',
     name: 'Alternatif B',
     values: {
-      c1: { low: 40, mid: 55, high: 70 },
-      c2: { low: 35, mid: 45, high: 55 },
-      c3: { low: 15, mid: 25, high: 35 },
-      c4: { low: 50, mid: 60, high: 75 },
+      c1: 0.5,
+      c2: 0.25,
+      c3: 0.25,
+      c4: 0.5,
     },
   },
   {
     id: 'a3',
     name: 'Alternatif C',
     values: {
-      c1: { low: 70, mid: 80, high: 95 },
-      c2: { low: 45, mid: 55, high: 65 },
-      c3: { low: 18, mid: 28, high: 32 },
-      c4: { low: 60, mid: 70, high: 85 },
+      c1: 1,
+      c2: 0.5,
+      c3: 0.5,
+      c4: 0.75,
     },
   },
 ];
@@ -53,9 +53,9 @@ const buildDefaultCriteria = (): Criterion[] =>
 const buildDefaultAlternatives = (): Alternative[] =>
   baseAlternatives.map((alternative) => ({
     ...alternative,
-    values: Object.entries(alternative.values).reduce<Record<string, FuzzyValue>>(
+    values: Object.entries(alternative.values).reduce<Record<string, number>>(
       (acc, [criterionId, value]) => {
-        acc[criterionId] = { ...value };
+        acc[criterionId] = value;
         return acc;
       },
       {},
@@ -74,7 +74,7 @@ interface FuzzySawState {
   updateAlternativeValue: (
     alternativeId: string,
     criterionId: string,
-    payload: Partial<FuzzyValue>,
+    value: number,
   ) => void;
   resetDefaults: () => void;
 }
@@ -128,7 +128,7 @@ export const useFuzzySawStore = create<FuzzySawState>((set, get) => ({
       const newAlternative: Alternative = {
         id: createId('a'),
         name: `Alternatif ${String.fromCharCode(65 + state.alternatives.length)}`,
-        values: criteria.reduce<Record<string, FuzzyValue>>((acc, criterion) => {
+        values: criteria.reduce<Record<string, number>>((acc, criterion) => {
           acc[criterion.id] = blankValue();
           return acc;
         }, {}),
@@ -149,7 +149,7 @@ export const useFuzzySawStore = create<FuzzySawState>((set, get) => ({
       alternatives: state.alternatives.filter((alternative) => alternative.id !== id),
     }));
   },
-  updateAlternativeValue: (alternativeId, criterionId, payload) => {
+  updateAlternativeValue: (alternativeId, criterionId, value) => {
     set((state) => ({
       alternatives: state.alternatives.map((alternative) => {
         if (alternative.id !== alternativeId) {
@@ -157,15 +157,12 @@ export const useFuzzySawStore = create<FuzzySawState>((set, get) => ({
         }
         return {
           ...alternative,
-          values: {
-            ...alternative.values,
-            [criterionId]: {
-              ...ensureValue(alternative.values[criterionId]),
-              ...payload,
+            values: {
+              ...alternative.values,
+            [criterionId]: value,
             },
-          },
-        };
-      }),
+          };
+        }),
     }));
   },
   resetDefaults: () =>
@@ -174,5 +171,3 @@ export const useFuzzySawStore = create<FuzzySawState>((set, get) => ({
       alternatives: buildDefaultAlternatives(),
     }),
 }));
-
-const ensureValue = (value?: FuzzyValue): FuzzyValue => value ?? blankValue();

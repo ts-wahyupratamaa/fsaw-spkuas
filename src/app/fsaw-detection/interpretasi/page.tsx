@@ -4,7 +4,7 @@ import { Suspense, useMemo } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { FaArrowLeftLong } from 'react-icons/fa6';
-import { AggregatedScore, calculateFuzzySaw, formatFuzzyValue } from '@/utils/fuzzy/fuzzySaw';
+import { AggregatedScore, calculateFuzzySaw } from '@/utils/fuzzy/fuzzySaw';
 import { useFuzzySawStore } from '@/store/fuzzySawStore';
 
 const parseRanking = (raw?: string): AggregatedScore[] => {
@@ -17,8 +17,7 @@ const parseRanking = (raw?: string): AggregatedScore[] => {
       .map((item) => ({
         alternativeId: item.alternativeId ?? '',
         alternativeName: item.alternativeName ?? 'Alternatif',
-        fuzzyScore: item.fuzzyScore,
-        crispScore: Number(item.crispScore ?? 0),
+        score: Number(item.score ?? 0),
       }))
       .filter((item) => item.alternativeId);
   } catch {
@@ -28,7 +27,7 @@ const parseRanking = (raw?: string): AggregatedScore[] => {
 
 const formatDelta = (top?: AggregatedScore, second?: AggregatedScore) => {
   if (!top || !second) return null;
-  const delta = top.crispScore - second.crispScore;
+  const delta = top.score - second.score;
   return delta >= 0 ? delta.toFixed(3) : null;
 };
 
@@ -81,8 +80,8 @@ const InterpretasiContent = () => {
               {topChoice ? (
                 <>
                   Saat ini <span className='font-semibold text-white'>{topChoice.alternativeName}</span> memimpin dengan nilai
-                  crisp {topChoice.crispScore.toFixed(3)}. Ini berarti kombinasi nilai TFN-nya paling stabil terhadap
-                  preferensi bobot yang sedang aktif di tabel utama.
+                  akhir {topChoice.score.toFixed(3)}. Ini berarti kombinasi nilai fuzzy-nya paling sesuai dengan preferensi
+                  bobot yang sedang aktif di tabel utama.
                 </>
               ) : (
                 'Tidak ada data ranking yang dikirimkan. Kembali ke halaman utama untuk menjalankan perhitungan.'
@@ -90,7 +89,7 @@ const InterpretasiContent = () => {
             </p>
             {topChoice && runnerUp && margin && (
               <p className='text-white/70'>
-                Selisih dengan peringkat kedua ({runnerUp.alternativeName}) saat ini {margin} poin crisp. Jika jarak ini makin
+                Selisih dengan peringkat kedua ({runnerUp.alternativeName}) saat ini {margin} poin. Jika jarak ini makin
                 lebar setelah Anda penyesuaian data, rekomendasi semakin mantap; kalau mengecil berarti dua kandidat saling
                 bersaing ketat.
               </p>
@@ -108,9 +107,8 @@ const InterpretasiContent = () => {
               <p className='text-xs uppercase tracking-[0.4em] text-emerald-200'>Hasil Akhir</p>
               <p className='mt-2 text-lg font-semibold text-white'>Fokuskan perhatian pada {topChoice.alternativeName}</p>
               <p className='mt-2 text-white/80'>
-                Nilai crisp {topChoice.crispScore.toFixed(3)} dan TFN {formatFuzzyValue(topChoice.fuzzyScore)} mengisyaratkan
-                performa paling siap untuk diimplementasikan. Gunakan kandidat ini sebagai baseline sebelum mengeksplor opsi
-                lain.
+                Nilai akhir {topChoice.score.toFixed(3)} mengisyaratkan performa paling siap untuk diimplementasikan. Gunakan
+                kandidat ini sebagai baseline sebelum mengeksplor opsi lain.
               </p>
             </div>
           )}
@@ -124,10 +122,9 @@ const InterpretasiContent = () => {
                 >
                   <div className='flex items-center justify-between text-xs font-semibold uppercase tracking-widest text-white/60'>
                     <span>Peringkat {index + 1}</span>
-                    <span>Nilai Crisp {item.crispScore.toFixed(3)}</span>
+                    <span>Nilai Akhir {item.score.toFixed(3)}</span>
                   </div>
                   <p className='mt-3 text-lg font-semibold text-white'>{item.alternativeName}</p>
-                  <p className='mt-2 font-mono text-xs text-white/70'>ΣW TFN: {formatFuzzyValue(item.fuzzyScore)}</p>
                   <p className='mt-3 text-white/75'>
                     {index === 0
                       ? 'Sinyal utama untuk intervensi: indikator fuzzy-nya paling konsisten terhadap bobot prioritas.'
