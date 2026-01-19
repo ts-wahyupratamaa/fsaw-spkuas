@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
-import { FaArrowLeftLong, FaPlus, FaRotateLeft, FaTrash } from 'react-icons/fa6';
+import { FaArrowLeftLong, FaChevronDown, FaPlus, FaRotateLeft, FaTrash } from 'react-icons/fa6';
 import { TextGenerateEffect } from '@/components/ui/text-generate-effect';
 import { Ripple } from '@/components/magicui/ripple';
 import { useFuzzySawStore } from '@/store/fuzzySawStore';
@@ -64,48 +64,10 @@ const FsawDetectionClient = () => {
   } = useFuzzySawStore();
 
   const [weightInputs, setWeightInputs] = useState<Record<string, string>>({});
-  const [valueInputs, setValueInputs] = useState<Record<string, string>>({});
-
   const results = useMemo(() => calculateFuzzySaw(criteria, alternatives), [criteria, alternatives]);
 
   const canRemoveCriterion = criteria.length > 1;
   const canRemoveAlternative = alternatives.length > 1;
-
-  const handleValueChange = (alternativeId: string, criterionId: string, value: string) => {
-    const cacheKey = `${alternativeId}-${criterionId}`;
-    setValueInputs((prev) => ({
-      ...prev,
-      [cacheKey]: value,
-    }));
-
-    if (isInterimNumeric(value)) {
-      return;
-    }
-
-    const normalizedValue = Number(value.replace(',', '.'));
-    if (Number.isNaN(normalizedValue)) {
-      return;
-    }
-
-    updateAlternativeValue(alternativeId, criterionId, normalizedValue);
-  };
-
-  const handleValueBlur = (alternativeId: string, criterionId: string) => {
-    const cacheKey = `${alternativeId}-${criterionId}`;
-    const cachedValue = valueInputs[cacheKey];
-    if (cachedValue === undefined) {
-      return;
-    }
-
-    const normalizedValue = Number(cachedValue.replace(',', '.'));
-    updateAlternativeValue(alternativeId, criterionId, Number.isNaN(normalizedValue) ? 0 : normalizedValue);
-
-    setValueInputs((prev) => {
-      const next = { ...prev };
-      delete next[cacheKey];
-      return next;
-    });
-  };
 
   const handleWeightChange = (id: string, value: string) => {
     setWeightInputs((prev) => ({
@@ -148,7 +110,7 @@ const FsawDetectionClient = () => {
   return (
     <div className='min-h-screen bg-gradient-to-b from-[#1d0410] via-[#37001c] to-[#0f0013] text-white relative overflow-hidden'>
       <Ripple />
-      <div className='relative z-10 max-w-6xl mx-auto px-4 py-12 space-y-8'>
+      <div className='relative z-10 mx-auto w-full max-w-6xl px-6 py-12 sm:px-8 space-y-8'>
         <div className='flex flex-col gap-6 text-center md:text-left'>
           <Link
             href='/'
@@ -159,8 +121,17 @@ const FsawDetectionClient = () => {
           <TextGenerateEffect words={words} />
           <p className='text-base text-white/80 md:max-w-3xl mx-auto md:mx-0'>
             Masukkan daftar alternatif, bobot kriteria, dan nilai fuzzy (0 - 1) sesuai skala
-            jurnal. Semua perhitungan Simple Additive Weighting (SAW) akan muncul bertahap agar
-            rumus yang digunakan tetap transparan.
+            jurnal. Data ini dilatih berdasarkan{' '}
+            <Link
+              href='https://journals.usm.ac.id/index.php/transformatika/article/view/441'
+              className='font-semibold text-white hover:text-emerald-300 underline underline-offset-4'
+              target='_blank'
+              rel='noreferrer'
+            >
+              Jurnal Transformatika
+            </Link>
+            . Semua perhitungan Simple Additive Weighting (SAW) akan muncul bertahap agar rumus
+            yang digunakan tetap transparan.
           </p>
           <div className='flex flex-wrap items-center gap-3 text-xs text-white/70 justify-center md:justify-start'>
             <span className='px-3 py-1 rounded-full border border-white/20 bg-white/5'>Input → Normalisasi → Pembobotan → Ranking</span>
@@ -295,19 +266,26 @@ const FsawDetectionClient = () => {
                         <div className='mt-3'>
                           <label className='flex flex-col text-xs text-white/70'>
                             <span className='mb-1 font-semibold'>Nilai Fuzzy (0 - 1)</span>
-                            <input
-                              type='number'
-                              step='0.01'
-                              min='0'
-                              max='1'
-                              inputMode='decimal'
-                              value={valueInputs[`${alternative.id}-${criterion.id}`] ?? value.toString()}
-                              onChange={(event) =>
-                                handleValueChange(alternative.id, criterion.id, event.target.value)
-                              }
-                              onBlur={() => handleValueBlur(alternative.id, criterion.id)}
-                              className='rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm text-white focus:border-white focus:outline-none'
-                            />
+                            <div className='relative'>
+                              <select
+                                value={value.toString()}
+                                onChange={(event) =>
+                                  updateAlternativeValue(
+                                    alternative.id,
+                                    criterion.id,
+                                    Number(event.target.value),
+                                  )
+                                }
+                                className='w-full appearance-none rounded-xl border border-white/10 bg-black/30 px-3 py-2 pr-9 text-sm text-white focus:border-white focus:outline-none'
+                              >
+                                <option value='0'>0 (SR)</option>
+                                <option value='0.25'>0.25 (R)</option>
+                                <option value='0.5'>0.5 (S)</option>
+                                <option value='0.75'>0.75 (T)</option>
+                                <option value='1'>1 (ST)</option>
+                              </select>
+                              <FaChevronDown className='pointer-events-none absolute right-3 top-1/2 h-3 w-3 -translate-y-1/2 text-white/60' />
+                            </div>
                           </label>
                         </div>
                       </div>

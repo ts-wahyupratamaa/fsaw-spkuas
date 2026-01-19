@@ -23,6 +23,9 @@
 - Ringkasan bobot, matriks berbobot, skor fuzzy, ranking crisp, dan interpretasi naratif.
 - Pure client-side: tinggal buka di browser, nggak perlu backend.
 
+### 📚 Referensi Jurnal
+- https://journals.usm.ac.id/index.php/transformatika/article/view/441
+
     </td>
     <td>
 
